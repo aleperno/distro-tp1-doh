@@ -1,0 +1,127 @@
+openapi: 3.0.0
+info:
+  version: "1.0.0"
+  title: API de Dominios
+  description: Documentación de la API de Dominios de la materia 75.43 Introducción a Sistemas Distribuidos
+
+servers:
+  - url: http://localhost:8080/api
+    description: Servidor de desarrollo
+
+# Paths servidos por la aplicación
+paths:
+  /domains/{domain}:
+    get:
+      operationId: "api.domains.obtener_dominio"
+      tags:
+        - "Domains"
+      summary: "Dominio"
+      description: "Resuelve mediante DoH un dominio"
+      parameters:
+        - in: path
+          name: domain
+          required: true
+          schema:
+            type: string
+          description: El dominio que se desea resolver
+      responses:
+        200:
+          description: "Resolución existosa"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Domain'
+        404:
+          description: "Dominio no se pudo resolver"
+  /custom-domains:
+    post:
+      operationId: "api.domains.create_custom_domain"
+      tags:
+        - "Domains"
+      summary: "Alta de dominio"
+      description: "Crea un nuevo custom domain"
+      requestBody:
+        required: true
+        x-body-name: 'domain'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputDomain'
+      responses:
+        201:
+          description: "Custom Domain creado exitosamente"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Domain"
+        400:
+          description: "Request malformado o dominio ya existente"
+  /custom-domains/{domain}:
+    put:
+      operationId: "api.domains.modify_custom_domain"
+      tags:
+        - "Domains"
+      summary: "Modifica un custom domain"
+      description: "Modifica un custom domain"
+      parameters:
+        - in: path
+          name: domain
+          required: true
+          schema:
+            type: string
+          description: El dominio a modificar
+      requestBody:
+        required: true
+        x-body-names: 'domain'
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InputDomain"
+      responses:
+        400:
+          description: "Request malformado"
+        404:
+          description: "Dominio inexistente"
+        200:
+          description: "Modificacion exitosa"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Domain"
+    delete:
+      operationId: "api.domains.delete_custom_domain"
+      tags:
+        - "Domains"
+      summary: "Elimina un custom domain"
+      description: "Elimina un custom domain"
+      parameters:
+        - in: path
+          name: domain
+          required: true
+          schema:
+            type: string
+          description: El dominio a eliminar
+      responses:
+        404:
+          description: "Dominio inexistente"
+        200:
+          description: "Se eliminó exitosamente"
+# Declaración de tipos de datos
+components:
+  schemas:
+    Domain:
+      type: "object"
+      properties:
+        domain:
+          type: "string"
+        ip:
+          type: "string"
+        custom:
+          type: "boolean"
+    InputDomain:
+      type: "object"
+      properties:
+        domain:
+          type: "string"
+        ip:
+          type: "string"
