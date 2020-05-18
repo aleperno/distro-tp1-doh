@@ -1,6 +1,7 @@
 from flask import make_response
 from utils.resolver import resolve_host
 from utils.domains import Domain
+import re
 
 domains = {}
 
@@ -58,7 +59,8 @@ def create_custom_domain(**kwargs):
         return make_response({'error': 'Missing data'}, 400)
     domain = body.get('domain')
     ip = body.get('ip')
-
+    if not re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$",ip):
+        return make_response({'error': "Invalid Format for IP Address (field 'ip')"}, 400)
     if domain in custom_domains:
         return make_response({'error': 'custom domain already exists'}, 400)
 
@@ -71,9 +73,10 @@ def create_custom_domain(**kwargs):
 def modify_custom_domain(**kwargs):
     body = kwargs.get('body')
     domain = kwargs.get('domain')
-    if not check_custom_domain_kw(required=('ip',), **body):
+    if not check_custom_domain_kw(required=('ip',), **body) or \
+       not re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", body.get('ip')):
         return make_response({'error': 'payload is invalid'}, 400)
-    #domain = body.get('domain')
+
     ip = body.get('ip')
 
     if domain not in custom_domains:
