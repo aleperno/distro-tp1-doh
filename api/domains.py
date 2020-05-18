@@ -91,3 +91,13 @@ def delete_custom_domain(domain):
 
     custom_domains.pop(domain)
     return make_response({'domain': domain}, 200)
+
+
+def query_domains(q):
+    items = []
+    for domain, obj in custom_domains.items():
+        if q in domain:
+            items.append(obj)
+
+    response = {'items': [d.as_dict() for d in items]}
+    return make_response(response, 200)

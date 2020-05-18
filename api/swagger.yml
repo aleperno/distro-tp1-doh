@@ -33,7 +33,30 @@ paths:
                 $ref: '#/components/schemas/Domain'
         404:
           description: "Dominio no se pudo resolver"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOutput'
   /custom-domains:
+    get:
+      operationId: "api.domains.query_domains"
+      tags:
+        - "Domains"
+      summary: "Query de custom domains"
+      description: "Busca custom domains a traves de una query"
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: "Busqueda exitosa"
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/DomainList'
     post:
       operationId: "api.domains.create_custom_domain"
       tags:
@@ -56,6 +79,10 @@ paths:
                 $ref: "#/components/schemas/Domain"
         400:
           description: "Request malformado o dominio ya existente"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOutput'
   /custom-domains/{domain}:
     put:
       operationId: "api.domains.modify_custom_domain"
@@ -76,12 +103,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/InputDomain"
+              $ref: "#/components/schemas/PutInputDomain"
       responses:
         400:
           description: "Request malformado"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOutput'
         404:
           description: "Dominio inexistente"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOutput'
         200:
           description: "Modificacion exitosa"
           content:
@@ -104,8 +139,16 @@ paths:
       responses:
         404:
           description: "Dominio inexistente"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorOutput'
         200:
           description: "Se eliminó exitosamente"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletedDomain'
 # Declaración de tipos de datos
 components:
   schemas:
@@ -125,3 +168,25 @@ components:
           type: "string"
         ip:
           type: "string"
+    PutInputDomain:
+      type: "object"
+      properties:
+        ip:
+          type: "string"
+    DeletedDomain:
+      type: "object"
+      properties:
+        domain:
+          type: "string"
+    ErrorOutput:
+      type: "object"
+      properties:
+        error:
+          type: "string"
+    DomainList:
+      type:  "object"
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Domain'
