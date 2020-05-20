@@ -4,8 +4,9 @@ from utils.domains import Domain
 import re
 
 domains = {}
-
 custom_domains = {}
+DOMAIN_VALIDATION_RE = r'(([\da-zA-Z])([_\w-]{,62})\.){,127}(([\da-zA-Z])[_\w-]{,61})?([\da-zA-Z]\.((xn\-\-[a-zA-Z\d]+)|([a-zA-Z\d]{2,})))'
+IP_VALIDATION_RE = r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$"
 
 def check_custom_domain_kw(required, **kwargs):
     """
@@ -32,7 +33,6 @@ def obtener_dominio(domain):
     """
     Maneja el `/api/domains/<domain>`
     """
-
     if domain in custom_domains:
         print("Existe el dominio custom")
         return make_response(custom_domains[domain].as_dict(), 200)
@@ -42,14 +42,20 @@ def obtener_dominio(domain):
         if not obj.expired:
             return make_response(obj.as_dict(), 200)
 
+
     # Ese bloque se ejecuta si no se encontró el dominio, o se encontró y se encuentra expirado
     # Intento resolverlo
     print(f"Intento resolver dominio {domain}")
-    new = resolve_and_store(domain)
-    if not new:
+    if not re.match(DOMAIN_VALIDATION_RE,domain):
+        print("Error en el formato del dominio")
+        return make_response({'error': "Invalid format for domain"}, 400)
+    try:
+        new = resolve_and_store(domain)
+        if not new:
         # No se pudo resolver
-        return make_response({'error': "domain not found"}, 404)
-
+            return make_response({'error': "domain not found"}, 404)
+    except Exception as e:
+        return make_response({'error': "Exception while resolving query for domain name (%s)" % str(e) }, 400)
     return make_response(new.as_dict(), 200)
 
 
@@ -59,8 +65,10 @@ def create_custom_domain(**kwargs):
         return make_response({'error': 'Missing data'}, 400)
     domain = body.get('domain')
     ip = body.get('ip')
-    if not re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$",ip):
+    if not re.match(IP_VALIDATION_RE,ip):
+        print("Error en el formato de la IP")
         return make_response({'error': "Invalid Format for IP Address (field 'ip')"}, 400)
+
     if domain in custom_domains:
         return make_response({'error': 'custom domain already exists'}, 400)
 
@@ -74,11 +82,10 @@ def modify_custom_domain(**kwargs):
     body = kwargs.get('body')
     domain = kwargs.get('domain')
     if not check_custom_domain_kw(required=('ip',), **body) or \
-       not re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", body.get('ip')):
+       not re.match(IP_VALIDATION_RE, body.get('ip')):
         return make_response({'error': 'payload is invalid'}, 400)
 
     ip = body.get('ip')
-
     if domain not in custom_domains:
         return make_response({'error': 'domain not found'}, 404)
 
@@ -89,6 +96,7 @@ def modify_custom_domain(**kwargs):
 
 
 def delete_custom_domain(domain):
+    print ("Domain: %s" % domain)
     if domain not in custom_domains:
         return make_response({'error': 'domain not found'}, 404)
 
